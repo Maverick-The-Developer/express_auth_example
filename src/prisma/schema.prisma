@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  password  String
+  role      Int?      @default(0) // 0: 일반, 100: 관리자 - 0보다 크면 관리자, 관리자 구분을 위해 사용
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  posts     Posts[]
+  replies   Replies[]
+
+  @@index([role])
+}
+
+model Posts {
+  id          Int           @id @default(autoincrement())
+  title       String
+  content     String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  userId      Int
+  user        Users        @relation(fields: [userId], references: [id])
+  replies     Replies[]
+  attachments Attachments[]
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([title])
+}
+
+model Replies {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    Int
+  user      Users   @relation(fields: [userId], references: [id])
+  postId    Int
+  post      Posts   @relation(fields: [postId], references: [id])
+
+  @@index(postId)
+  @@index([createdAt])
+}
+
+model Attachments {
+  id     Int    @id @default(autoincrement())
+  name   String
+  size   Int
+  path   String
+  postId Int
+  post   Posts @relation(fields: [postId], references: [id])
+
+  @@index([postId])
+}
